@@ -5,44 +5,37 @@
 import csv
 import numpy
 
-fieldnames = ['y', 'x1', 'x2', 'x3']
-
 with open('experiment.txt', 'r') as csvfile:
-    reader = csv.DictReader(csvfile, fieldnames, dialect='excel-tab')
-    array = list(reader)
+    # parse
+    reader = csv.DictReader(csvfile, dialect='excel-tab')
+    headers = reader.fieldnames
+    print(headers)
 
-# y_t = sum_t(b*x_t)
-line_y = []
-line_x1 = []
-line_x2 = []
-line_x3 = []
+    # # y_t = sum_t(b*x_t) - regression model, where y_t = line_vars[0], x_t = line_vars[1:]
+    line_vars = [[] for i in range(len(headers))]
 
-for row in array:
-    line_y.append(row['y'])
-    line_x1.append(row['x1'])
-    line_x2.append(row['x2'])
-    line_x3.append(row['x3'])
+    for row in reader:
+        for index in range(len(headers)):
+            line_vars[index].append(row[headers[index]])
 
-line_y = [float(i) for i in line_y]
-line_x1 = [float(i) for i in line_x1]
-line_x2 = [float(i) for i in line_x2]
-line_x3 = [float(i) for i in line_x3]
+    for index in range(len(headers)):
+        line_vars[index] = [float(i) for i in line_vars[index]]
 
-Y = numpy.array(line_y)
-XT = numpy.array([line_x1, line_x2, line_x3])  # transposed? transposed.
-print(XT)
-print(Y)
+    # fill in
+    Y = numpy.array(line_vars[0])
+    XT = numpy.array([line_vars[i + 1] for i in range(len(headers) - 1)])
 
-# Ax = B, where A = (X^T*X), x = b, B = X^T*Y
-X = XT.transpose()
-YT = Y[numpy.newaxis, :].T  # or .transpose() - no matter there is, visual only
-print(X)
-print(YT)
+    X = XT.transpose()
+    YT = Y[numpy.newaxis, :].T
 
-A = XT @ X
-B = XT @ Y
+    print(X)
+    print(YT)
 
-x = numpy.linalg.solve(A, B)
-print(x)
+    # compute
+    A = XT @ X
+    B = XT @ Y
 
+    # # Ax = B, where A = (X^T*X), x = b - our goal, B = X^T*Y
+    x = numpy.linalg.solve(A, B)
 
+    print(x)
